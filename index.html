@@ -344,6 +344,11 @@
   #simBar{display:none;background:#fff;border-top:2px solid transparent;flex:none;transition:border-color .15s}
   #simBar.run{border-top-color:var(--ok)}
   body.taskmode #simBar{display:block}
+  /* Kütüphane devresi: yalnızca çalıştırma — düzenleme/ekleme/kaydetme araçları yok */
+  body.libmode #left,body.libmode #palOpen,body.libmode #right,body.libmode #zWire,body.libmode #saveBtn,
+  body.libmode #clearCanvasBtn,body.libmode #checkBtn,body.libmode #runBtn,body.libmode #tHint{display:none!important}
+  body.libmode.simon #simBar{display:block}
+  body.libmode main{grid-template-columns:1fr!important}
   body.drawpage.simon #simBar{display:block}   /* serbest çizim: yalnızca simülasyon çalışırken */
   #simBar .row{display:flex;align-items:center;gap:14px;padding:10px 18px 10px 16px}
   #simBar .pill{display:inline-flex;align-items:center;gap:7px;background:#f1efeb;border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;letter-spacing:.5px;color:#4b5160;flex:none}
@@ -4440,6 +4445,7 @@ function bridgeAround(ids){
   return made;
 }
 function del(){
+  if (ctx === 'lib') return;
   if (multi.size || multiW.size){
     const ids = multi, wids = new Set(multiW);
     const br = bridgeAround(ids);
@@ -5753,9 +5759,21 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-lmac]'); if (!b) return;
   const m = MACROS[+b.dataset.lmac];
   if (!m.c.length){ const n = b.querySelector('.note'); n.hidden = false; setTimeout(() => { n.hidden = true; }, 2200); return; }
-  if (ctx !== 'free' || !curProj || curProj === EXID){ if (!curProj || curProj === EXID) curProj = projNew(); projQuiet = true; try { openCtx('free'); } finally { projQuiet = false; } }
-  go('draw'); setPalTab('mac'); placing = null; placingMacro = m; markPalette(); render();
+  openLibCircuit(m);
 });
+/* Kütüphane devresi: yalnızca seçilen devre kâğıtta gösterilir, salt çalıştırma (sembol ekleme / düzenleme yok).
+   Hiçbir projeye ya da göreve kaydedilmez; başka bir devre ya da ekran açılınca tamamen silinir. */
+function openLibCircuit(m){
+  if (mode === 'sim') setMode('edit');
+  ctx = 'lib'; wiring = null; placing = null; placingMacro = null; drag = null; box = null; markPalette();
+  load({comps:[], wires:[]});
+  const g = macroGeom(m);
+  insertMacro(m, (FX0 + FX1 - (g.x1 - g.x0)) / 2, (FY0 + FY1 - (g.y1 - g.y0)) / 2);   // kâğıdın ortasına
+  select(null);
+  $('#ctxLbl').textContent = 'Kütüphane: ' + m.n; $('#tTitle').textContent = m.n; setTitleBlock(m.n);
+  simT0 = Date.now(); simHtml = ''; resetKwh(); chkReset();
+  go('draw'); setMode('sim');
+}
 function renderLib(){
   $('#libList').innerHTML = libMacrosHtml();
 }
@@ -5833,7 +5851,8 @@ const PAGES = {learn:'#pageLearn', lib:'#pageLib', proj:'#pageProj', circ:'#page
 function go(p){
   if (mode === 'sim') setMode('edit');   // sayfa değişince simülasyon durur; geri gelince hazır beklemez
   page = p;
-  document.body.classList.toggle('taskmode', p === 'draw' && ctx !== 'free');
+  document.body.classList.toggle('taskmode', p === 'draw' && ctx !== 'free' && ctx !== 'lib');
+  document.body.classList.toggle('libmode', p === 'draw' && ctx === 'lib');
   document.body.classList.toggle('drawpage', p === 'draw');
   updateRun();
   Object.entries(PAGES).forEach(([k,sel]) => $(sel).classList.toggle('on', k === p));
@@ -6021,6 +6040,7 @@ document.addEventListener('click', e => {
   if (a === 'nav'){ go(arg === 'draw' ? 'proj' : arg); }
   else if (a === 'start') startTask(arg, 'learn');
   else if (a === 'cstart') startTask(arg, 'circ');
+  else if (a === 'back' && ctx === 'lib') go('lib');
   else if (a === 'back' && ctx === 'free') go('proj');
   else if (a === 'back') go(backTo === 'circ' && circObj() && !circObj().deleted ? 'circ' : 'learn');
   else if (a === 'check'){
@@ -6156,7 +6176,7 @@ function openCtx(c){
   applyPalVis();
 }
 /* Her devrenin 1. görevinde sol palet (Sembol + Makro) gizlenir; diğer görevlerde ve serbest çizimde görünür */
-function palVisible(){ if (ctx === 'free' || (window.klAdmin && klAdmin())) return true; const t = taskById(ctx); return !(t && !t.box && t.ti === 0); }
+function palVisible(){ if (ctx === 'lib') return false; if (ctx === 'free' || (window.klAdmin && klAdmin())) return true; const t = taskById(ctx); return !(t && !t.box && t.ti === 0); }
 function applyPalVis(){ if (ctx !== 'free' && palTab === 'mac' && !(window.klAdmin && klAdmin())) setPalTab('sym'); const v = palVisible(); $('main').classList.toggle('nopal', !v); if (!v) $('main').classList.remove('lhide'); }
 function dump(){ return {comps: comps.map(({id,type,x,y,label,delay,act,rate,rot,flip,vout,iout,techVals,inA}) => ({id,type,x,y,label,delay,act,rate,rot,flip,vout,iout,techVals,inA})), wires, nextId}; }
 function load(o){
@@ -6165,6 +6185,7 @@ function load(o){
   select(null); update();
 }
 function save(){ try {
+  if (ctx === 'lib') return;   // kütüphane devresi hiçbir yere kaydedilmez
   if (ctx === 'free' && !curProj) return;   // proje açık değilken (açılış demosu) hiçbir şey kaydedilmez
   const k = drawKey(), v = JSON.stringify(dump()), isP = ctx === 'free' && curProj;
   if (isP && localStorage.getItem(k) === v) return;   // değişmediyse tarihi de değiştirme
