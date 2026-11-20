@@ -1955,7 +1955,7 @@ const motArrows=(c,o)=>{
       `<path d="M${f(q[0]+tx*8)} ${f(q[1]+ty*8)}L${f(q[0]+nx*4.5)} ${f(q[1]+ny*4.5)}L${f(q[0]-nx*4.5)} ${f(q[1]-ny*4.5)}Z" style="fill:${G}"/>`;
   };
   const locked=(c.techVals||{}).fault==='Rotor kilitli';
-  let s=`<g class="mspin${ccw?' ccw':''}${c.vfdSrc?' vfdrot':''}"${c.vfdSrc?` transform="rotate(${(c._ang||0).toFixed(1)})"`:''} style="stroke:${G};stroke-width:2.6;fill:none${locked?';animation-play-state:paused':''}">${arc(212,300)+arc(28,128)}</g>`;
+  let s=`<g class="mspin${ccw?' ccw':''} vfdrot" transform="rotate(${(c._ang||0).toFixed(1)})" style="stroke:${G};stroke-width:2.6;fill:none${locked?';animation-play-state:paused':''}">${arc(212,300)+arc(28,128)}</g>`;
   if (o.xs.length===3) s+=`<text x="37" y="${o.pe==='side'?-5:4}" style="font-size:11px;font-weight:800;fill:${G}">${ccw?'CCW':'CW'}</text>`;
   return s;
 };
@@ -6113,7 +6113,7 @@ document.addEventListener('pointerdown',e=>{
   if(mode!=='sim') return;
   document.querySelectorAll('.comp .mspin.vfdrot').forEach(g=>{
     const k=g.closest('.comp'), m=k&&byId(+k.dataset.id); if(!m) return;
-    const w=((m.techVals||{}).fault==='Rotor kilitli')?0:(m.rpm||0)*0.24;   // 1500 d/dk ≈ 360°/sn
+    const w=((m.techVals||{}).fault==='Rotor kilitli')?0:(m.vfdSrc?(m.rpm||0)*0.24:360/2.2);   // 1500 d/dk ≈ 360°/sn
     m._ang=(((m._ang||0)+(m.dir==='ccw'?-1:1)*w*dt)%360+360)%360;
     g.setAttribute('transform','rotate('+m._ang.toFixed(1)+')');
   });
