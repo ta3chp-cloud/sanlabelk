@@ -5265,7 +5265,8 @@ function applyDel(){ SECTIONS.forEach((s,si) => { s.deleted = DEL.s.includes(si)
 applyDel();
 const anyDel = () => DEL.c.length + DEL.s.length + DEL.b.length > 0;
 const visSecCount = () => SECTIONS.filter(x => !x.deleted).length;
-const secNo = si => SECTIONS.slice(0, si).filter(x => !x.deleted).length + 1;
+const secNo = si => SECTIONS.slice(0, si).filter(x => !x.deleted).length + 1 + (si >= ORIG_SEC_N ? visBoxCount() : 0);
+const origVisSec = () => SECTIONS.slice(0, ORIG_SEC_N).filter(x => !x.deleted).length;
 const boxVisible = i => !DEL.b.includes(i);
 const visBoxCount = () => BOX_TASKS.filter((_, i) => boxVisible(i)).length;
 const boxPos = i => BOX_TASKS.slice(0, i).filter((_, j) => boxVisible(j)).length + 1;
@@ -5287,7 +5288,7 @@ const taskById = id => {
   return allTasks().find(t => t.id === id);
 };
 const boxTasks = () => BOX_TASKS.map((b, i) => taskById('custom-box-' + i)).filter(t => boxVisible(t.idx));
-const nextTask = () => allTasks().find(t => !prog.done[t.id]) || boxTasks().find(t => !prog.done[t.id]);
+const nextTask = () => { const all = allTasks(), pend = t => !prog.done[t.id]; return all.find(t => t.si < ORIG_SEC_N && pend(t)) || boxTasks().find(pend) || all.find(pend); };
 const doneCount = () => allTasks().filter(t => prog.done[t.id]).length + boxTasks().filter(t => prog.done[t.id]).length;
 const totalTasks = () => allTasks().length + visBoxCount();
 
@@ -5310,6 +5311,7 @@ function thumb(icons){
 const nodeSvg = done => `<svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="23" fill="${done?'#fcd9c3':'#f6e4d9'}"/><path d="${done?'M23 38V5':'M23 38L13 17'}" stroke="#15171c" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="23" cy="5" r="3.5" fill="#15171c"/><circle cx="23" cy="38" r="3.5" fill="#15171c"/></svg>`;
 const SKEY = 'kumandalab.secNames';
 const SEC_ORIG = SECTIONS.map(x => x.t);
+const ORIG_SEC_N = SECTIONS.length;   // hazır bölümler; sonrakiler yöneticinin eklediği bölümlerdir (listenin en sonunda görünür)
 let secNames = {};
 try { secNames = JSON.parse(localStorage.getItem(SKEY)) || {}; } catch(e){}
 SECTIONS.forEach((x,i) => { if (secNames[i] && String(secNames[i]).trim()) x.t = String(secNames[i]).trim(); });
@@ -5348,9 +5350,7 @@ const delBtn = (key, what) => delAsk === key
 const PLUS_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
 
 function renderSections(){
-  $('#secList').innerHTML =
-    `<div class="l1"><svg width="16" height="12" viewBox="0 0 16 12"><polygon points="0,0 16,0 8,12" fill="#e8590c"/></svg>L1</div><div class="en"></div>` +
-    SECTIONS.map((s,si) => {
+  const secCard = (s, si) => {
       if (s.deleted) return '';
       const vc = s.circuits.filter(c => !c.deleted);
       const tk = vc.flatMap(c => c.tasks), dn = tk.filter(t => prog.done[t.id]).length, open = openSec.has(si);
@@ -5377,7 +5377,13 @@ function renderSections(){
           <div class="sc">${dn}/${tk.length} ${open ? ICON.chevUp : ICON.chevDown}</div>
           <div class="sbar"><i style="width:${tk.length ? dn / tk.length * 100 : 0}%"></i></div></div>
         ${open ? `<div class="cg">${rows}${addBtn}</div>` : ''}</div>`;
-    }).join('') + `<button type="button" class="add-sec-btn" data-addsec title="Yeni bölüm ekle" aria-label="Yeni bölüm ekle">${PLUS_ICON}<span>Bölüm ekle</span></button>` + taskBoxesHtml() + (anyDel() ? '<button type="button" class="restore-del" data-restoredel>↺ Silinenleri geri getir</button>' : '');
+  };
+  $('#secList').innerHTML = `<div class="l1"><svg width="16" height="12" viewBox="0 0 16 12"><polygon points="0,0 16,0 8,12" fill="#e8590c"/></svg>L1</div><div class="en"></div>` +
+    SECTIONS.map((s,si) => si < ORIG_SEC_N ? secCard(s,si) : '').join('') +
+    taskBoxesHtml() +
+    SECTIONS.map((s,si) => si >= ORIG_SEC_N ? secCard(s,si) : '').join('') +
+    `<button type="button" class="add-sec-btn" data-addsec title="Yeni bölüm ekle" aria-label="Yeni bölüm ekle">${PLUS_ICON}<span>Bölüm ekle</span></button>` + tendHtml() +
+    (anyDel() ? '<button type="button" class="restore-del" data-restoredel>↺ Silinenleri geri getir</button>' : '');
 }
 /* ===== Görev kutuları (14 adet) + zaman çizelgesi sonu ===== */
 const TASK_BOX_COUNT = 14;
@@ -5393,7 +5399,7 @@ const penSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stro
 function taskBoxesHtml(){
   const cards = Array.from({length:TASK_BOX_COUNT}, (_,i) => {
     if (!boxVisible(i)) return '';
-    const open = openBox.has(i), n = visSecCount() + boxPos(i);
+    const open = openBox.has(i), n = origVisSec() + boxPos(i);
     const tid = 'custom-box-' + i;
     const done = !!prog.done[tid], bt = BOX_TASKS[i] || {};
     let hasDrawing = false;
@@ -5413,8 +5419,9 @@ function taskBoxesHtml(){
         <div class="ct"><div class="cn-wrap"><span class="cn">${esc(taskName(i))}</span></div><div class="cd"><span>${esc(bt.line || (hasDrawing ? 'Kayıtlı devreyi düzenle veya simüle et' : 'Yeni devre çiz ve simüle et'))}</span></div></div>
         <div class="tg"><i></i><b>${done ? 'Tamam' : (hasDrawing ? 'Kayıtlı' : 'Görev')}</b></div>${ICON.chevR}</div></div>` : ''}</div>`;
   }).join('');
-  return cards + `<div class="tend"><div class="nd">${endNodeSvg}</div><span>Bütün bölümler bitince motor çalışır</span></div>`;
+  return cards;
 }
+const tendHtml = () => `<div class="tend"><div class="nd">${endNodeSvg}</div><span>Bütün bölümler bitince motor çalışır</span></div>`;
 (function(){
   const box = $('#secList');
   const commit = inp => {
@@ -5540,7 +5547,7 @@ function renderHome(){
   const t = nextTask();
   $('#hCard').innerHTML = t
     ? `<div class="k">Sıradaki görev</div><h2>${esc(t.t)}</h2>
-       <div class="m">${t.box ? `Bölüm ${visSecCount() + boxPos(t.idx)} · Pratik görev ${boxPos(t.idx)}/${visBoxCount()}` : `Bölüm ${secNo(t.si)} · ${esc(t.circ.t)} · Görev ${t.ti+1}/${t.circ.tasks.length}`}</div>
+       <div class="m">${t.box ? `Bölüm ${origVisSec() + boxPos(t.idx)} · Pratik görev ${boxPos(t.idx)}/${visBoxCount()}` : `Bölüm ${secNo(t.si)} · ${esc(t.circ.t)} · Görev ${t.ti+1}/${t.circ.tasks.length}`}</div>
        <div>${esc(t.d)}</div><button class="cta" data-act="start:${t.id}">Göreve başla</button>`
     : `<div class="k">Tebrikler!</div><h2>Tüm görevleri tamamladın</h2>
        <div>Serbest çizimde kendi devrelerini kurmaya devam edebilirsin.</div>
