@@ -1559,7 +1559,7 @@ Object.assign(TYPES,{
   tm4:KT2('Termik manyetik şalter (4 kutuplu)','Q',4,-60,{mg:1,rate:'160 A'}),
   rcd2:KT2('Kaçak akım rölesi (2 kutuplu)','F',2,0,{y:60,L:58,R:54,lx:-60,ly:-41,rate:'30 mA'}),
   rcd4:KT2('Kaçak akım rölesi (4 kutuplu)','F',4,-60,{y:60,L:58,R:54,lx:-120,ly:-41,rate:'30 mA'}),
-  mpcb:KT2('Motor koruma şalteri','Q',3,-40,{mg:1,L:62,lx:-106}),
+  mpcb:KT2('Motor koruma şalteri','Q',3,-40,{y:60,L:62,R:16,lx:-98,ly:-27}),
   tor:KT('Termik röle','FT',3,-20),
   tc95:{n:'Termik kontağı 95-96',kind:'misc',pre:'',col:'#2352d8'},
   tc97:{n:'Termik kontağı 97-98',kind:'misc',pre:'',col:'#2352d8'},
@@ -1699,7 +1699,19 @@ Object.assign(KSYM,{
   mcb1:c=>kset2(1,0,c), mcb2:c=>kset2(2,0,c), mcb3:c=>kset2(3,-40,c),
   tm3:c=>kset2(3,-40,c,{mg:1}), tm4:c=>kset2(4,-60,c,{mg:1,N:1}),
   rcd2:c=>krcd2(2,0,c), rcd4:c=>krcd2(4,-60,c),
-  mpcb:c=>kset2(3,-40,c,{mg:1,extra:'<path d="M-98-3V9M-98 3H-90" />'}),
+  mpcb:c=>{   // motor koruma şalteri: kutup + termik kanca + "I>" kutusu, mekanik bağ ve tahrik kutusu
+    const cl=kclosed(c), xs=[-40,0,40];
+    let s=xs.map((x,i)=>`<path d="M${x}-60V-42M${x} 27.5V60"/>`
+      +(cl?`<path d="M${x}-42V-19"/>`:`<path d="M${x-15.5}-41L${x}-19"/>`)
+      +`<path d="M${x}-19V-6H${x+9}V4H${x-1}"/>`
+      +`<text x="${x}" y="23" text-anchor="middle" style="font-size:11px;font-weight:700">I&gt;</text>`
+      +kpn(x,2*i+1,2*i+2,60)).join('');
+    s+=`<rect x="-52" y="-9" width="104" height="36.5"/><path d="M-52 10H52M-20-9V27.5M20-9V27.5"/>`;
+    s+=`<path style="${kdsh}" d="M-67-30H34"/>`;
+    s+=`<rect x="-84" y="-39" width="17" height="17"/><path d="M-75.5-39V-22M-84-30.5H-67"/>`;
+    s+=`<path d="M-62-22V18"/><path style="${kdsh}" d="M-62 1H-52M-62 18H-52"/>`;
+    return s;
+  },
   tor:c=>[-20,0,20].map((x,i)=>`<path d="M${x}-40V-14M${x} 40V14"/><rect x="${x-6}" y="-14" width="12" height="28" class="${c.act?'fillon':''}"/>`+kn(x,2*i+1,2*i+2)).join(''),
   tc95:c=>kblade(c,1)+kth+kn(-4,95,96), tc97:c=>kblade(c,0)+kth+kn(-4,97,98),
   mc13:c=>kblade(c,0)+kx(-26)+kn(-4,13,14), mc21:c=>kblade(c,1)+kx(-26)+kn(-4,21,22),
@@ -2574,7 +2586,7 @@ setInterval(() => { simBar(); motUi(); }, 1000);
 /* ============ Durum ============ */
 let comps = [], wires = [], nextId = 1;
 /* Serbest çizim projeleri: 'kumandalab.my.*' anahtarları yalnızca giriş yapan hesabın kendi satırına (user_progress) eşitlenir; başkalarıyla paylaşılmaz */
-const PJKEY = 'kumandalab.my.projects', PDKEY = 'kumandalab.my.proj.';
+const PJKEY = 'kumandalab.my.projects', PDKEY = 'kumandalab.my.proj.', EXID = '__example', EXKEY = 'kumandalab.task2.example';   // örnek devre: yönetici düzenler, herkese ortak
 let curProj = null, projQuiet = false;
 let multi = new Set(), multiW = new Set(), wiringVia = [], box = null, page = 'learn';
 let wireMode = false;
@@ -5625,7 +5637,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-lmac]'); if (!b) return;
   const m = MACROS[+b.dataset.lmac];
   if (!m.c.length){ const n = b.querySelector('.note'); n.hidden = false; setTimeout(() => { n.hidden = true; }, 2200); return; }
-  if (ctx !== 'free' || !curProj){ if (!curProj) curProj = projNew(); projQuiet = true; try { openCtx('free'); } finally { projQuiet = false; } }
+  if (ctx !== 'free' || !curProj || curProj === EXID){ if (!curProj || curProj === EXID) curProj = projNew(); projQuiet = true; try { openCtx('free'); } finally { projQuiet = false; } }
   go('draw'); setPalTab('mac'); placing = null; placingMacro = m; markPalette(); render();
 });
 function renderLib(){
@@ -5635,7 +5647,9 @@ function renderLib(){
 function projList(){ try { const a = JSON.parse(localStorage.getItem(PJKEY)); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
 function projSave(a){ try { localStorage.setItem(PJKEY, JSON.stringify(a)); } catch(e){} }
 function projData(id){ try { return JSON.parse(localStorage.getItem(PDKEY + id)); } catch(e){ return null; } }
-function projName(id){ const p = projList().find(x => x.id === id); return p ? p.name : 'Serbest çizim'; }
+function exData(){ try { const o = JSON.parse(localStorage.getItem(EXKEY)); return o && Array.isArray(o.comps) ? o : null; } catch(e){ return null; } }
+function isAdm(){ return !!(window.klAdmin && klAdmin()); }
+function projName(id){ if (id === EXID) return 'Mühürleme devresi'; const p = projList().find(x => x.id === id); return p ? p.name : 'Serbest çizim'; }
 function projTouch(id, n){ const a = projList(), p = a.find(x => x.id === id); if (p){ p.t = Date.now(); p.n = n; projSave(a); } }
 function projMigrate(){   // eski tek çizimi ilk açılışta "Proje 1" olarak sakla
   if (localStorage.getItem(PJKEY) !== null) return;
@@ -5659,7 +5673,8 @@ function projDel(id){
   if (curProj === id) curProj = null;
 }
 function projOpen(id){
-  if (!projList().some(p => p.id === id)) return;
+  if (id !== EXID && !projList().some(p => p.id === id)) return;
+  if (id === EXID && !exData()){ try { localStorage.setItem(EXKEY, JSON.stringify(demoDump())); } catch(e){} }
   curProj = id; projQuiet = true;
   try { openCtx('free'); } finally { projQuiet = false; }
   go('draw');
@@ -5677,24 +5692,23 @@ function projThumb(d){
     return macroThumb(m);
   } catch(e){ return ''; }
 }
-let demoThumbCache = null;
 function renderProj(){
   projMigrate();
   const a = projList().slice().sort((x, y) => y.t - x.t), fmt = t => new Date(t).toLocaleDateString('tr-TR');
-  if (demoThumbCache === null){ try { demoThumbCache = projThumb(demoDump()); } catch(e){ demoThumbCache = ''; } }
+  let exTh = ''; try { exTh = projThumb(exData() || demoDump()); } catch(e){}
   $('#projList').innerHTML =
     `<button type="button" class="lmac pnew" data-pj="new"><div class="lth pth"><span class="pplus">${MI.plus}</span></div><div class="lb"><b>Yeni proje</b><span class="lt">Boş pafta</span></div></button>` +
     `<div class="lgrp"><span>Projelerim</span><span class="mga"><span class="mgc">${a.length}</span></span></div>` +
     (a.length ? '<div class="lgrid">' + a.map(p => `<div class="lmw pw"><button type="button" class="lmac pc" data-pj="open:${p.id}"><div class="lth pth">${projThumb(projData(p.id))}</div><div class="lb"><b>${esc(p.name)}</b><span class="lt">${p.n} sembol · ${fmt(p.t)}</span></div></button><div class="pact"><button type="button" class="pdel" data-pj="del:${p.id}" title="Sil" aria-label="Projeyi sil">${MI.del}</button></div></div>`).join('') + '</div>'
       : '<div class="mac-empty">Henüz proje yok. “Yeni proje” ile başla.</div>') +
     `<div class="lgrp"><span>Örnek devre</span></div>` +
-    `<button type="button" class="lmac pnew pex" data-pj="demo"><div class="lth pth">${demoThumbCache}</div><div class="lb"><b>Mühürleme devresi</b></div></button>`;
+    `<button type="button" class="lmac pnew pex" data-pj="demo"><div class="lth pth">${exTh}</div><div class="lb"><b>Mühürleme devresi</b>${isAdm() ? '<span class="lt">Yönetici: değişiklik tüm kullanıcılar için kaydedilir</span>' : ''}</div></button>`;
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-pj]'); if (!b) return;
   const [a, id] = b.dataset.pj.split(':');
   if (a === 'new') projOpen(projNew());
-  else if (a === 'demo') projOpen(projNew('Mühürleme devresi', demoDump()));
+  else if (a === 'demo') projOpen(isAdm() ? EXID : projNew('Mühürleme devresi', exData() || demoDump()));
   else if (a === 'open') projOpen(id);
   else if (a === 'del'){ const p = projList().find(x => x.id === id);
     if (p && confirm('“' + p.name + '” projesi silinsin mi? Bu işlem geri alınamaz.')){ projDel(id); renderProj(); } }
@@ -5998,7 +6012,7 @@ function chkReset(){ autoPrev = autoRan = structSig(); hideDone(); }   // yükle
 const KEY = 'kumandalab.v2';
 let ctx = 'free';
 /* Görev çizimleri: yönetici paylaşılan şablonu ('task2.'), diğer kullanıcılar kendi kopyasını ('my.task2.') yazar */
-const drawKey = () => ctx === 'free' ? (curProj ? PDKEY + curProj : KEY) : ((window.klAdmin && klAdmin()) ? 'kumandalab.task2.' : 'kumandalab.my.task2.') + ctx;
+const drawKey = () => ctx === 'free' ? (curProj === EXID ? EXKEY : curProj ? PDKEY + curProj : KEY) : ((window.klAdmin && klAdmin()) ? 'kumandalab.task2.' : 'kumandalab.my.task2.') + ctx;
 const drawRead = () => { let v = localStorage.getItem(drawKey()); if (v == null && ctx !== 'free') v = localStorage.getItem('kumandalab.task2.' + ctx); return v; };
 function openCtx(c){
   if (mode === 'sim') setMode('edit');   // görev her zaman durmuş (Çalıştır'a basılmamış) açılsın
@@ -6037,7 +6051,7 @@ function save(){ try {
   const k = drawKey(), v = JSON.stringify(dump()), isP = ctx === 'free' && curProj;
   if (isP && localStorage.getItem(k) === v) return;   // değişmediyse tarihi de değiştirme
   localStorage.setItem(k, v);
-  if (isP && !projQuiet) projTouch(curProj, comps.length);
+  if (isP && curProj !== EXID && !projQuiet) projTouch(curProj, comps.length);
 } catch(e){} }
 $('#btnExport').onclick = () => {
   const a = document.createElement('a');
