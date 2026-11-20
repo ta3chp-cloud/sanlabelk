@@ -3832,7 +3832,7 @@ function symbol(c){
     case 'motor':
       s += `<path d="M0-40V-20M0 20V40"/><circle r="20" class="${c.on?'fillon':''}"/>
             <text x="0" y="5" text-anchor="middle" style="font-size:14px;font-weight:700">M</text>
-            <g class="${c.on?'spin':''}"><path d="M0-14A14 14 0 0 1 14 0"/></g>`;
+            <g class="${c.on?'spinjs':''}" transform="rotate(${(c._ang||0).toFixed(1)})"><path d="M0-14A14 14 0 0 1 14 0"/></g>`;
       break;
     case 'l1': case 'l2': case 'l3': {
       const n = t[1];
@@ -6111,9 +6111,9 @@ document.addEventListener('pointerdown',e=>{
   requestAnimationFrame(motSpin);
   const dt=Math.min(0.1,(ts-(motSpin.t||ts))/1000); motSpin.t=ts;
   if(mode!=='sim') return;
-  document.querySelectorAll('.comp .mspin.vfdrot').forEach(g=>{
+  document.querySelectorAll('.comp .mspin.vfdrot, .comp .spinjs').forEach(g=>{
     const k=g.closest('.comp'), m=k&&byId(+k.dataset.id); if(!m) return;
-    const w=((m.techVals||{}).fault==='Rotor kilitli')?0:(m.vfdSrc?(m.rpm||0)*0.24:360/2.2);   // 1500 d/dk ≈ 360°/sn
+    const w=((m.techVals||{}).fault==='Rotor kilitli')?0:(g.classList.contains('spinjs')?450:m.vfdSrc?(m.rpm||0)*0.24:360/2.2);   // 1500 d/dk ≈ 360°/sn
     m._ang=(((m._ang||0)+(m.dir==='ccw'?-1:1)*w*dt)%360+360)%360;
     g.setAttribute('transform','rotate('+m._ang.toFixed(1)+')');
   });
