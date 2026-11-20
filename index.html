@@ -685,6 +685,33 @@
   #pageLib .lmac .lnum{width:27px;height:27px;border-radius:7px;font-size:15px;line-height:1;margin-top:-2px}
   #pageLib .lmac b{font-size:19px;line-height:24px;font-weight:700;letter-spacing:-.1px;color:#15171c}
   #pageLib .lmac::after{content:"";flex:none;width:10px;height:16px;margin-left:2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16' fill='none' stroke='%239aa0ab' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 2l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+  /* ===== Serbest çizim projeleri ===== */
+  #pageProj h1.pt{font-size:33px;line-height:1.15;font-weight:700;letter-spacing:-.2px;margin:0 0 22px}
+  #pageProj .lgrp{margin:30px 4px 12px;font-size:16px;line-height:20px;font-weight:700;color:#6f7480}
+  #pageProj .mgc{font-weight:700;color:#6f7480;font-size:16px}
+  #pageProj .lgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+  @media (max-width:1100px){#pageProj .lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:700px){#pageProj .lgrid{grid-template-columns:1fr}}
+  #pageProj .lmw,#pageProj .pnew{border:1px solid #ece9e3;border-radius:24px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.03)}
+  #pageProj .lmw{min-height:142px}
+  #pageProj .lmw:hover,#pageProj .pnew:hover{background:#fcfbf9}
+  #pageProj .lmw .lmac{border:0;border-radius:24px 0 0 24px;min-height:142px}
+  #pageProj .lmac{gap:20px;padding:14px 16px 14px 14px;align-items:center}
+  #pageProj .lmac .lb{gap:6px}
+  #pageProj .lmac b{font-size:20px;line-height:25px;font-weight:700;letter-spacing:-.1px;color:#15171c}
+  #pageProj .lmac .lt{font-size:15px;line-height:19px;font-weight:500;color:#6f7480}
+  #pageProj .pth{flex:none;width:90px;height:72px;border-radius:10px;border:1px solid #ece9e3;position:relative;overflow:hidden;
+    background-color:#fff;background-image:linear-gradient(#e9ebf3 1px,transparent 1px),linear-gradient(90deg,#e9ebf3 1px,transparent 1px);background-size:15px 15px}
+  #pageProj .pth svg{width:100%;height:100%;display:block;position:relative}
+  #pageProj .pc .lb{align-self:flex-start;padding-top:12px}
+  #pageProj .pnew{min-height:96px;width:100%;margin:0;border-radius:24px}
+  #pageProj .pnew.pex::after{content:"";flex:none;width:10px;height:16px;margin-left:auto;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16' fill='none' stroke='%239aa0ab' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 2l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+  #pageProj .pplus{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:11px;background:#15171c;color:#e8590c;display:grid;place-items:center}
+  #pageProj .pplus svg{width:20px;height:20px;stroke-width:2.6}
+  #pageProj .pact{display:flex;flex-direction:column;justify-content:center;padding:8px 14px 8px 0}
+  #pageProj .pdel{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #ece9e3;border-radius:10px;background:#fff;color:#6b7180;cursor:pointer}
+  #pageProj .pdel:hover{background:#fff5f5;color:var(--bad);border-color:#ffc9c9}
+  #pageProj .pdel svg{width:18px;height:18px}
   .mac-empty{padding:18px 10px;text-align:center;color:var(--muted);font-size:13.5px;border:1.5px dashed var(--line);border-radius:12px}
   .mac-tools{margin-top:4px;padding-top:10px;border-top:1px dashed var(--line)}
   .mac-tools button{width:100%;font-size:13px;padding:8px 10px}
@@ -1035,6 +1062,12 @@ body:not(.is-admin) #btnImport, body:not(.is-admin) #saveBtn, body:not(.is-admin
   <div class="top" id="topLib"></div>
   <h1 class="pt">Kütüphane</h1>
   <div id="libList"></div>
+</div></section>
+
+<section class="page" id="pageProj"><div class="col">
+  <div class="top" id="topProj"></div>
+  <h1 class="pt">Serbest Çizim</h1>
+  <div id="projList"></div>
 </div></section>
 
 <section class="page" id="pageCirc"><div class="cp-top" id="circTop"></div><div class="col cpg" id="circBox"></div></section>
@@ -1451,7 +1484,7 @@ function live(){
 function restorePage(){
   try{var r=JSON.parse(sessionStorage.getItem('kl.ret'));sessionStorage.removeItem('kl.ret');
     if(!r||r.page==='draw'||r.page==='learn')return;
-    if(r.page==='circ'&&r.c){curCirc=r.c;go('circ')}else if(r.page==='lib')go('lib')}catch(e){}}
+    if(r.page==='circ'&&r.c){curCirc=r.c;go('circ')}else if(r.page==='lib')go('lib');else if(r.page==='proj')go('proj')}catch(e){}}
 /* içeriği Supabase'den çek, sonra uygulamayı başlat */
 (ses?token().catch(function(){clearSes();return null}):Promise.resolve(null))
 .then(function(t){
@@ -2540,6 +2573,9 @@ setInterval(() => { simBar(); motUi(); }, 1000);
 
 /* ============ Durum ============ */
 let comps = [], wires = [], nextId = 1;
+/* Serbest çizim projeleri: 'kumandalab.my.*' anahtarları yalnızca giriş yapan hesabın kendi satırına (user_progress) eşitlenir; başkalarıyla paylaşılmaz */
+const PJKEY = 'kumandalab.my.projects', PDKEY = 'kumandalab.my.proj.';
+let curProj = null, projQuiet = false;
 let multi = new Set(), multiW = new Set(), wiringVia = [], box = null, page = 'learn';
 let wireMode = false;
 let sel = null, mode = 'edit', placing = null, placingMacro = null, wiring = null, drag = null;
@@ -5589,13 +5625,81 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-lmac]'); if (!b) return;
   const m = MACROS[+b.dataset.lmac];
   if (!m.c.length){ const n = b.querySelector('.note'); n.hidden = false; setTimeout(() => { n.hidden = true; }, 2200); return; }
-  if (ctx !== 'free') openCtx('free');
+  if (ctx !== 'free' || !curProj){ if (!curProj) curProj = projNew(); projQuiet = true; try { openCtx('free'); } finally { projQuiet = false; } }
   go('draw'); setPalTab('mac'); placing = null; placingMacro = m; markPalette(); render();
 });
 function renderLib(){
   $('#libList').innerHTML = libMacrosHtml();
 }
-const PAGES = {learn:'#pageLearn', lib:'#pageLib', circ:'#pageCirc', draw:'#pageDraw'};
+/* ===== Serbest çizim: proje listesi (hesaba özel) ===== */
+function projList(){ try { const a = JSON.parse(localStorage.getItem(PJKEY)); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+function projSave(a){ try { localStorage.setItem(PJKEY, JSON.stringify(a)); } catch(e){} }
+function projData(id){ try { return JSON.parse(localStorage.getItem(PDKEY + id)); } catch(e){ return null; } }
+function projName(id){ const p = projList().find(x => x.id === id); return p ? p.name : 'Serbest çizim'; }
+function projTouch(id, n){ const a = projList(), p = a.find(x => x.id === id); if (p){ p.t = Date.now(); p.n = n; projSave(a); } }
+function projMigrate(){   // eski tek çizimi ilk açılışta "Proje 1" olarak sakla
+  if (localStorage.getItem(PJKEY) !== null) return;
+  const a = [];
+  try { const o = JSON.parse(localStorage.getItem(KEY)); if (o && o.comps && o.comps.length){
+    const id = 'p' + Date.now().toString(36); localStorage.setItem(PDKEY + id, JSON.stringify(o)); a.push({id, name:'Proje 1', t:Date.now(), n:o.comps.length}); } } catch(e){}
+  projSave(a);
+}
+function projNew(name, data){
+  projMigrate();
+  const a = projList(), id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  if (!name){ let mx = 0; a.forEach(p => { const m = /^Proje (\d+)$/.exec(p.name); if (m) mx = Math.max(mx, +m[1]); }); name = 'Proje ' + (mx + 1); }
+  const d = data || {comps:[], wires:[], nextId:100};
+  try { localStorage.setItem(PDKEY + id, JSON.stringify(d)); } catch(e){}
+  a.unshift({id, name, t:Date.now(), n:(d.comps || []).length}); projSave(a);
+  return id;
+}
+function projDel(id){
+  projSave(projList().filter(p => p.id !== id));
+  try { localStorage.removeItem(PDKEY + id); } catch(e){}
+  if (curProj === id) curProj = null;
+}
+function projOpen(id){
+  if (!projList().some(p => p.id === id)) return;
+  curProj = id; projQuiet = true;
+  try { openCtx('free'); } finally { projQuiet = false; }
+  go('draw');
+}
+/* küçük resim: kayıtlı çizimden makro biçimi üretip makro önizlemesiyle çizer */
+function projThumb(d){
+  if (!d || !d.comps || !d.comps.length) return '';
+  try {
+    const cs = d.comps, ws = d.wires || [], idx = new Map(cs.map((c, i) => [c.id, i + 1])), wno = new Map(ws.map((w, i) => [w.id, i + 1]));
+    const ep = e => e.id !== undefined ? (idx.has(e.id) ? ['p', idx.get(e.id), e.p] : null)
+                  : e.w !== undefined ? (wno.has(e.w) ? ['w', wno.get(e.w), e.x, e.y] : null) : ['f', e.x, e.y];
+    const m = {c: cs.map(c => [c.type, c.x, c.y, c.label || '', c.rot || 0, !!c.flip]),
+      w: ws.map(w => { const A = ep(w.a), B = ep(w.b); if (!A || !B) return [['p', 99999, 0], ['p', 99999, 0]];
+        const r = [A, B]; if (w.via && w.via.length) r.push(w.via); return r; })};
+    return macroThumb(m);
+  } catch(e){ return ''; }
+}
+let demoThumbCache = null;
+function renderProj(){
+  projMigrate();
+  const a = projList().slice().sort((x, y) => y.t - x.t), fmt = t => new Date(t).toLocaleDateString('tr-TR');
+  if (demoThumbCache === null){ try { demoThumbCache = projThumb(demoDump()); } catch(e){ demoThumbCache = ''; } }
+  $('#projList').innerHTML =
+    `<button type="button" class="lmac pnew" data-pj="new"><div class="lth pth"><span class="pplus">${MI.plus}</span></div><div class="lb"><b>Yeni proje</b><span class="lt">Boş pafta</span></div></button>` +
+    `<div class="lgrp"><span>Projelerim</span><span class="mga"><span class="mgc">${a.length}</span></span></div>` +
+    (a.length ? '<div class="lgrid">' + a.map(p => `<div class="lmw pw"><button type="button" class="lmac pc" data-pj="open:${p.id}"><div class="lth pth">${projThumb(projData(p.id))}</div><div class="lb"><b>${esc(p.name)}</b><span class="lt">${p.n} sembol · ${fmt(p.t)}</span></div></button><div class="pact"><button type="button" class="pdel" data-pj="del:${p.id}" title="Sil" aria-label="Projeyi sil">${MI.del}</button></div></div>`).join('') + '</div>'
+      : '<div class="mac-empty">Henüz proje yok. “Yeni proje” ile başla.</div>') +
+    `<div class="lgrp"><span>Örnek devre</span></div>` +
+    `<button type="button" class="lmac pnew pex" data-pj="demo"><div class="lth pth">${demoThumbCache}</div><div class="lb"><b>Mühürleme devresi</b></div></button>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pj]'); if (!b) return;
+  const [a, id] = b.dataset.pj.split(':');
+  if (a === 'new') projOpen(projNew());
+  else if (a === 'demo') projOpen(projNew('Mühürleme devresi', demoDump()));
+  else if (a === 'open') projOpen(id);
+  else if (a === 'del'){ const p = projList().find(x => x.id === id);
+    if (p && confirm('“' + p.name + '” projesi silinsin mi? Bu işlem geri alınamaz.')){ projDel(id); renderProj(); } }
+});
+const PAGES = {learn:'#pageLearn', lib:'#pageLib', proj:'#pageProj', circ:'#pageCirc', draw:'#pageDraw'};
 function go(p){
   if (mode === 'sim') setMode('edit');   // sayfa değişince simülasyon durur; geri gelince hazır beklemez
   page = p;
@@ -5603,11 +5707,12 @@ function go(p){
   document.body.classList.toggle('drawpage', p === 'draw');
   updateRun();
   Object.entries(PAGES).forEach(([k,sel]) => $(sel).classList.toggle('on', k === p));
-  document.querySelectorAll('.nv').forEach(b => b.classList.toggle('on', b.dataset.act === 'nav:' + (p === 'circ' ? 'learn' : p)));
+  document.querySelectorAll('.nv').forEach(b => b.classList.toggle('on', b.dataset.act === 'nav:' + (p === 'circ' ? 'learn' : p === 'proj' ? 'draw' : p)));
   try { $('#toast').style.display = (p !== 'draw' && !sessionStorage.getItem('kl.toast')) ? 'flex' : 'none'; } catch(e){}
   if (p === 'learn') renderHome();
   if (p === 'lib'){ renderHome(); renderLib(); }
   if (p === 'circ') renderCircPage();
+  if (p === 'proj'){ $('#topProj').innerHTML = topbar(); renderProj(); }
   if (p === 'draw'){ applyPalVis(); renderTaskBox(); render(); fitView(); if (ctx === 'free') setZoom(1); simHtml = ''; simBar(); }
 }
 function startTask(id, from){ if (from) backTo = from; else if (String(id).startsWith('custom-box-')) backTo = 'learn'; openCtx(id); go('draw'); }
@@ -5781,9 +5886,10 @@ function renderTaskBox(res){
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const [a, arg] = b.dataset.act.split(':');
-  if (a === 'nav'){ if (arg === 'draw' && ctx !== 'free') openCtx('free'); go(arg); }
+  if (a === 'nav'){ go(arg === 'draw' ? 'proj' : arg); }
   else if (a === 'start') startTask(arg, 'learn');
   else if (a === 'cstart') startTask(arg, 'circ');
+  else if (a === 'back' && ctx === 'free') go('proj');
   else if (a === 'back') go(backTo === 'circ' && circObj() && !circObj().deleted ? 'circ' : 'learn');
   else if (a === 'check'){
     if (ctx === 'free' || !taskById(ctx)) return;
@@ -5892,7 +5998,7 @@ function chkReset(){ autoPrev = autoRan = structSig(); hideDone(); }   // yükle
 const KEY = 'kumandalab.v2';
 let ctx = 'free';
 /* Görev çizimleri: yönetici paylaşılan şablonu ('task2.'), diğer kullanıcılar kendi kopyasını ('my.task2.') yazar */
-const drawKey = () => ctx === 'free' ? KEY : ((window.klAdmin && klAdmin()) ? 'kumandalab.task2.' : 'kumandalab.my.task2.') + ctx;
+const drawKey = () => ctx === 'free' ? (curProj ? PDKEY + curProj : KEY) : ((window.klAdmin && klAdmin()) ? 'kumandalab.task2.' : 'kumandalab.my.task2.') + ctx;
 const drawRead = () => { let v = localStorage.getItem(drawKey()); if (v == null && ctx !== 'free') v = localStorage.getItem('kumandalab.task2.' + ctx); return v; };
 function openCtx(c){
   if (mode === 'sim') setMode('edit');   // görev her zaman durmuş (Çalıştır'a basılmamış) açılsın
@@ -5901,7 +6007,7 @@ function openCtx(c){
   try { o = JSON.parse(drawRead()); } catch(e){}
   if (o && o.comps) {
     load(o);
-  } else if (c === 'free') {
+  } else if (c === 'free' && !curProj) {
     demo();
   } else if (taskById(c) && taskById(c).init) {
     load(mkInit(taskById(c).init));
@@ -5911,7 +6017,7 @@ function openCtx(c){
   $('#ctxLbl').textContent = c === 'free' ? 'Serbest çizim' : 'Görev: ' + taskById(c).t;
   simT0 = Date.now(); simHtml = ''; resetKwh();
   setTitleBlock(c === 'free' ? 'Serbest çizim' : taskById(c).t);
-  if (c === 'free') $('#tTitle').textContent = 'Serbest çizim';
+  if (c === 'free') $('#tTitle').textContent = curProj ? projName(curProj) : 'Serbest çizim';
   if (c !== 'free'){ const t = taskById(c); $('#tTitle').textContent = t.t.replace(/\.$/,''); $('#tHintTxt').textContent = t.line || t.d; }
   renderTaskBox();
   chkReset();
@@ -5926,7 +6032,13 @@ function load(o){
   comps.forEach(c => { c.on = false; c.done = false; c.el = 0; c.q = false; c.pe = false; });
   select(null); update();
 }
-function save(){ try { localStorage.setItem(drawKey(), JSON.stringify(dump())); } catch(e){} }
+function save(){ try {
+  if (ctx === 'free' && !curProj) return;   // proje açık değilken (açılış demosu) hiçbir şey kaydedilmez
+  const k = drawKey(), v = JSON.stringify(dump()), isP = ctx === 'free' && curProj;
+  if (isP && localStorage.getItem(k) === v) return;   // değişmediyse tarihi de değiştirme
+  localStorage.setItem(k, v);
+  if (isP && !projQuiet) projTouch(curProj, comps.length);
+} catch(e){} }
 $('#btnExport').onclick = () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(dump(), null, 1)], {type:'application/json'}));
@@ -5942,7 +6054,9 @@ $('#btnClear').onclick = () => { if (confirm('Tüm devre silinsin mi?')) load({c
 $('#btnDemo').onclick = demo;
 $('#btnGrid').onclick = e => { const off = svg.classList.toggle('nogrid'); e.currentTarget.classList.toggle('on', !off); };
 
-function demo(){
+function demo(){ demoBuild(); select(null); update(); }
+function demoDump(){ const sc = comps, sw = wires, sn = nextId; try { demoBuild(); return dump(); } finally { comps = sc; wires = sw; nextId = sn; } }
+function demoBuild(){
   comps = []; wires = []; nextId = 1;
   const OX = 100, OY = 60;
   const L1a = addComp('l1',140+OX,60+OY), S2 = addComp('pb_nc',140+OX,160+OY,'S2'), S1 = addComp('pb_no',140+OX,280+OY,'S1');
@@ -5951,7 +6065,6 @@ function demo(){
   addWire(S2.id,1,C1.id,0); addWire(C1.id,1,S1.id,1);
   const L1b = addComp('l1',380+OX,60+OY), C2 = addComp('c_no',380+OX,160+OY,'K1'), M1 = addComp('motor',380+OX,280+OY,'M1'), L2b = addComp('n',380+OX,380+OY);
   addWire(L1b.id,0,C2.id,0); addWire(C2.id,1,M1.id,0); addWire(M1.id,1,L2b.id,0);
-  select(null); update();
 }
 
 
