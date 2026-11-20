@@ -1010,7 +1010,11 @@ html.kdark img,html.kdark video{filter:invert(1) hue-rotate(180deg)}
 body:not(.is-admin) .ren, body:not(.is-admin) .del-btn, body:not(.is-admin) .add-circ-btn, body:not(.is-admin) .add-sec-btn,
 body:not(.is-admin) .macact, body:not(.is-admin) .mact, body:not(.is-admin) [data-mm],
 body:not(.is-admin).taskmode #clearCanvasBtn, body:not(.is-admin) #btnDemo, body:not(.is-admin) #btnClear, body:not(.is-admin) #btnExport,
-body:not(.is-admin) #btnImport, body:not(.is-admin) #saveBtn, body:not(.is-admin) [data-act="resetAll"]{display:none!important}
+body:not(.is-admin) #btnImport, body:not(.is-admin) #saveBtn, body:not(.is-admin) [data-act="resetAll"],
+body:not(.is-admin) [data-tkren], body:not(.is-admin) [data-tkdel], body:not(.is-admin) [data-tkadd], body:not(.is-admin) [data-tkrestore],
+body:not(.is-admin) [data-restoredel], body:not(.is-admin) .restore-del, body:not(.is-admin) [data-addsec], body:not(.is-admin) [data-addcirc],
+body:not(.is-admin) [data-renc], body:not(.is-admin) [data-rens], body:not(.is-admin) [data-ren], body:not(.is-admin) [data-del],
+body:not(.is-admin) .tk-adv, body:not(.is-admin) .tk-eb{display:none!important}
 #klLock{position:fixed;left:10px;bottom:10px;z-index:99999;width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.9);font-size:16px;cursor:pointer;opacity:.45}
 #klLock:hover,body.is-admin #klLock{opacity:1}
 #klBox{position:fixed;inset:0;z-index:100000;background:var(--bg);overflow:auto;display:none}
@@ -1480,7 +1484,7 @@ function klLogout(){
   (me?uflush():Promise.resolve()).then(function(){return true},function(){return confirm('Son değişiklikler sunucuya kaydedilemedi. Yine de çıkış yapılsın mı?')})
   .then(function(ok){if(!ok)return;uclear();try{S0.call(ST,'kl.uid','');R0.call(ST,'kl.dirty')}catch(e){}clearSes();location.reload()})}
 window.klFlush=function(){return me?uflush().catch(function(){}):Promise.resolve()};
-window.klAdmin=function(){return role==='admin'};
+Object.defineProperty(window,'klAdmin',{value:function(){return role==='admin'},writable:false,configurable:false});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&me&&ST.getItem('kl.dirty')==='1')uflush().catch(function(){})});
 
 /* Yönetici bir görev devresini değiştirdiyse, kullanıcının eski yerel kopyasını sil ki yeni sürüm yüklensin */
@@ -4845,6 +4849,7 @@ function syncCats(){ MACROS.forEach(m => { if (!m.g) m.g = 'Makrolar'; if (!MACR
   syncCats();
 })();
 function saveMacros(){
+  if (!isAdm()) return;
   try { localStorage.setItem(MKEY, JSON.stringify({cats:MACRO_CATS, macros:MACROS}, (k, v) => (typeof k === 'string' && k[0] === '_') ? undefined : v)); } catch(e){}
 }
 function refreshMacros(){
@@ -4904,15 +4909,18 @@ function macAsk(o){
 }
 const catValidate = ci => v => !v ? 'Kategori adı boş olamaz.' : MACRO_CATS.some((c, j) => j !== ci && c.toLowerCase() === v.toLowerCase()) ? 'Bu adda bir kategori zaten var.' : '';
 function addCat(){
+  if (!isAdm()) return;
   macAsk({title:'Yeni kategori', msg:'Kategori adını yaz.', input:true, ok:'Ekle', validate:catValidate(-1), done:v => { MACRO_CATS.push(v); refreshMacros(); }});
 }
 function renCat(ci){
+  if (!isAdm()) return;
   const old = MACRO_CATS[ci]; if (old === undefined) return;
   macAsk({title:'Kategori adını düzenle', input:true, value:old, ok:'Kaydet', validate:catValidate(ci), done:v => {
     MACROS.forEach(m => { if (m.g === old) m.g = v; }); MACRO_CATS[ci] = v; refreshMacros();
   }});
 }
 function delCat(ci){
+  if (!isAdm()) return;
   const cat = MACRO_CATS[ci]; if (cat === undefined) return;
   const n = MACROS.filter(m => m.g === cat).length;
   macAsk({title:'Kategori silinsin mi?', msg: n ? `“${cat}” kategorisi ve içindeki ${n} makro kalıcı olarak silinecek.` : `“${cat}” kategorisi silinecek.`, ok:'Sil', danger:true, done:() => {
@@ -4922,6 +4930,7 @@ function delCat(ci){
   }});
 }
 function deleteMacro(i, after){
+  if (!isAdm()) return;
   const m = MACROS[i]; if (!m) return;
   macAsk({title:'Makro silinsin mi?', msg:`“${m.n}” kalıcı olarak silinecek.`, ok:'Sil', danger:true, done:() => {
     if (placingMacro === m) placingMacro = null;
@@ -4929,6 +4938,7 @@ function deleteMacro(i, after){
   }});
 }
 function resetMacros(){
+  if (!isAdm()) return;
   macAsk({title:'Varsayılana dön?', msg:'Eklediğin, düzenlediğin ve sildiğin tüm makro ve kategoriler geri alınamaz şekilde ilk haline döner.', ok:'Sıfırla', danger:true, done:() => {
     placingMacro = null; MACROS.length = 0; MACROS_DEFAULT.forEach(m => MACROS.push(JSON.parse(JSON.stringify(m))));
     MACRO_CATS.length = 0; refreshMacros();
@@ -4945,6 +4955,7 @@ function dmCatFill(sel){
   $('#dmNewCat').hidden = s.value !== '__new'; $('#dmNewCat').value = '';
 }
 function openMacroEditor(i, cat, code){
+  if (!isAdm()) return;
   dmIdx = i; const m = i >= 0 ? MACROS[i] : null;
   $('#dmTitle').textContent = m ? 'Makroyu düzenle' : 'Makro ekle';
   $('#dmName').value = m ? m.n : ''; $('#dmDesc').value = m ? (m.d || '') : '';
@@ -4981,6 +4992,7 @@ $('#dmCode').addEventListener('input', () => {
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-mm]'); if (!b) return;
   e.preventDefault();
+  if (!isAdm()) return;   // makro düzenleme yalnızca yönetici
   const p = b.dataset.mm.split(':'), act = p[0], n = +p[1];
   if (act === 'add') openMacroEditor(-1, null);
   else if (act === 'addin') openMacroEditor(-1, MACRO_CATS[n]);
@@ -5198,6 +5210,7 @@ function updateRun(){
 }
 $('#runBtn').onclick = () => setMode(mode === 'sim' ? 'edit' : 'sim');
 $('#saveBtn').onclick = () => {
+  if (!isAdm()) return;
   save();
   const btn = $('#saveBtn');
   const sp = btn.querySelector('span');
@@ -5428,7 +5441,7 @@ const saveProg = () => { try { localStorage.setItem(PKEY, JSON.stringify(prog));
 const DKEY = 'kumandalab.deleted';
 let DEL = {c:[], s:[], b:[]};
 try { DEL = Object.assign({c:[], s:[], b:[]}, JSON.parse(localStorage.getItem(DKEY)) || {}); } catch(e){}
-const saveDel = () => { try { localStorage.setItem(DKEY, JSON.stringify(DEL)); } catch(e){} };
+const saveDel = () => { if (!isAdm()) return; try { localStorage.setItem(DKEY, JSON.stringify(DEL)); } catch(e){} };
 function applyDel(){ SECTIONS.forEach((s,si) => { s.deleted = DEL.s.includes(si); s.circuits.forEach(c => { c.deleted = !!(c.cid && DEL.c.includes(c.cid)); }); }); }
 applyDel();
 const anyDel = () => DEL.c.length + DEL.s.length + DEL.b.length > 0;
@@ -5493,7 +5506,7 @@ function secTitleHtml(si){
 const CKEY = 'kumandalab.customCircs';
 let customData = { added: {}, names: {} };
 try { customData = Object.assign({ added: {}, names: {} }, JSON.parse(localStorage.getItem(CKEY)) || {}); } catch(e){}
-const saveCustomData = () => { try { localStorage.setItem(CKEY, JSON.stringify(customData)); } catch(e){} };
+const saveCustomData = () => { if (!isAdm()) return; try { localStorage.setItem(CKEY, JSON.stringify(customData)); } catch(e){} };
 
 customData.secs = Array.isArray(customData.secs) ? customData.secs : [];
 customData.secs.forEach(x => { const i = SECTIONS.length; SEC_ORIG[i] = x.t; SECTIONS.push({t:(secNames[i] && String(secNames[i]).trim()) || x.t, circuits:[]}); });   // yöneticinin eklediği bölümler
@@ -5558,7 +5571,7 @@ const TASK_BOX_COUNT = 14;
 const NKEY = 'kumandalab.taskNames';
 let taskNames = [];
 try { taskNames = JSON.parse(localStorage.getItem(NKEY)) || []; } catch(e){}
-const saveNames = () => { try { localStorage.setItem(NKEY, JSON.stringify(taskNames)); } catch(e){} };
+const saveNames = () => { if (!isAdm()) return; try { localStorage.setItem(NKEY, JSON.stringify(taskNames)); } catch(e){} };
 const taskName = i => (taskNames[i] && taskNames[i].trim()) || ((BOX_TASKS[i] && BOX_TASKS[i].t) || ('Görev ' + (i+1)));
 const openBox = new Set();
 let editBox = -1;
@@ -5593,6 +5606,7 @@ const tendHtml = () => `<div class="tend"><div class="nd">${endNodeSvg}</div><sp
 (function(){
   const box = $('#secList');
   const commit = inp => {
+    if (!isAdm()){ editBox = -1; editSec = -1; editCirc = ''; return; }
     if (inp.dataset.cinput !== undefined){
       const key = inp.dataset.cinput;
       const [si, ci] = key.split('.').map(Number);
@@ -5618,6 +5632,7 @@ const tendHtml = () => `<div class="tend"><div class="nd">${endNodeSvg}</div><sp
     const i = +inp.dataset.box; taskNames[i] = inp.value.trim(); saveNames(); editBox = -1; renderSections();
   };
   box.addEventListener('click', e => {
+    if (!isAdm() && e.target.closest('[data-restoredel],[data-del],[data-addsec],[data-addcirc],[data-renc],[data-rens],[data-ren]')){ e.stopPropagation(); return; }   // yalnızca yönetici düzenleyebilir
     const rb = e.target.closest('[data-restoredel]');
     if (rb){ e.stopPropagation(); DEL = {c:[], s:[], b:[]}; saveDel(); applyDel(); delAsk = ''; renderHome(); renderLib(); return; }
     const db = e.target.closest('[data-del]');
@@ -5837,7 +5852,7 @@ let curCirc = null, backTo = 'learn', editTask = '', taskDelAsk = '';
 const TEKEY = 'kumandalab.taskEdits';
 let TE = {names:{}, descs:{}, steps:{}, msgs:{}, deleted:[], added:{}};
 try { TE = Object.assign({names:{}, descs:{}, steps:{}, msgs:{}, deleted:[], added:{}}, JSON.parse(localStorage.getItem(TEKEY)) || {}); } catch(e){}
-const saveTE = () => { try { localStorage.setItem(TEKEY, JSON.stringify(TE)); } catch(e){} };
+const saveTE = () => { if (!isAdm()) return; try { localStorage.setItem(TEKEY, JSON.stringify(TE)); } catch(e){} };
 function rebuildTasks(c){
   const orig = c.orig || c.tasks, add = (TE.added[c.cid] || []).filter(t => !orig.some(x => x.id === t.id));
   c.tasks = orig.concat(add).filter(t => !TE.deleted.includes(t.id));
@@ -5898,7 +5913,7 @@ function renderCircPage(){
   $('#circTop').innerHTML = `<button class="ib" data-act="nav:learn" aria-label="Geri">${BACK_ICON}</button><div class="cpt"><div class="cp-t">${esc(c.t)}</div><div class="cp-s">Bölüm ${secNo(curCirc.si)} · ${esc(sc.t)}</div></div><button class="ib" data-act="nav:learn" title="Haritaya dön" aria-label="Haritaya dön">${MAP_ICON}</button>`;
   const rows = c.tasks.map((t, i) => {
     const done = !!prog.done[t.id], isCur = !!cur && cur.id === t.id, id = esc(t.id), ask = taskDelAsk === t.id;
-    const editing = editTask === t.id;
+    const adm = isAdm(), editing = adm && editTask === t.id;
     const title = editing
       ? `<input class="tk-in" data-tkin="${id}" maxlength="60" value="${esc(t.t)}" aria-label="Görev adı">`
       : `<div class="tkt">${esc(t.t)}</div>`;
@@ -5914,18 +5929,19 @@ function renderCircPage(){
         ${descHtml}</div>
       <div class="tkx">${done ? `<span class="tks">${SMALL_STAR}${SMALL_STAR}${SMALL_STAR}</span>` : ''}
         <div class="tka">${done ? `<button type="button" class="tk-ib" data-act="cstart:${id}" title="Tekrar çöz" aria-label="Tekrar çöz">↻</button>` : ''}
-          <button type="button" class="tk-ib" data-tkren="${id}" title="Adı ve açıklamayı düzenle" aria-label="Adı ve açıklamayı düzenle">${PEN}</button>
-          ${ask ? `<button type="button" class="tk-ib ask" data-tkdel="${id}" title="Silmeyi onayla">Sil?</button>` : `<button type="button" class="tk-ib" data-tkdel="${id}" title="Görevi sil" aria-label="Görevi sil">${TRASH_ICON}</button>`}</div></div></div>`;
+          ${adm ? `<button type="button" class="tk-ib" data-tkren="${id}" title="Adı ve açıklamayı düzenle" aria-label="Adı ve açıklamayı düzenle">${PEN}</button>` : ''}
+          ${!adm ? '' : ask ? `<button type="button" class="tk-ib ask" data-tkdel="${id}" title="Silmeyi onayla">Sil?</button>` : `<button type="button" class="tk-ib" data-tkdel="${id}" title="Görevi sil" aria-label="Görevi sil">${TRASH_ICON}</button>`}</div></div></div>`;
   }).join('');
   const hid = hiddenTasks(c).length;
   $('#circBox').innerHTML = `<div class="cp-prog"><div class="bar"><i style="width:${n ? d / n * 100 : 0}%"></i></div><b>${d}/${n}</b></div>
-    <div class="cp-card">${rows || '<div class="tk-empty">Bu devrede görev yok. Aşağıdan ekleyebilirsin.</div>'}<button type="button" class="tk-add" data-tkadd>${PLUS_ICON} Görev ekle</button></div>
-    ${hid ? `<button type="button" class="restore-del" data-tkrestore>↺ Silinen görevleri geri getir (${hid})</button>` : ''}`;
+    <div class="cp-card">${rows || `<div class="tk-empty">${isAdm() ? 'Bu devrede görev yok. Aşağıdan ekleyebilirsin.' : 'Bu devrede henüz görev yok.'}</div>`}${isAdm() ? `<button type="button" class="tk-add" data-tkadd>${PLUS_ICON} Görev ekle</button>` : ''}</div>
+    ${isAdm() && hid ? `<button type="button" class="restore-del" data-tkrestore>↺ Silinen görevleri geri getir (${hid})</button>` : ''}`;
 }
 (function(){
   const box = $('#circBox'), refresh = () => { renderCircPage(); renderHome(); renderLib(); };
   const focusIn = () => { const i = box.querySelector('input.tk-in'); if (i){ i.focus(); i.select(); } };
   const save = id => {
+    if (!isAdm()){ editTask = ''; renderCircPage(); return; }
     const c = circObj(); if (!c) return;
     const ti = box.querySelector('input.tk-in'), ta = box.querySelector('textarea.tk-ta');
     const v = ti ? ti.value.trim() : '';
@@ -5948,6 +5964,7 @@ function renderCircPage(){
   const cancel = () => { editTask = ''; renderCircPage(); };
   box.addEventListener('click', e => {
     const c = circObj(); if (!c) return;
+    if (!isAdm() && e.target.closest('[data-tkren],[data-tkdel],[data-tkadd],[data-tkrestore],[data-tksave],[data-sadd],[data-sdel],[data-sup],[data-sdn],[data-sreset]')){ editTask = ''; return; }   // yalnızca yönetici düzenleyebilir
     if (e.target.closest('input.tk-in, textarea.tk-ta, .tk-f')) return;
     if (e.target.closest('[data-sadd]')){ const l = box.querySelector('[data-selist]'); l.insertAdjacentHTML('beforeend', seRow(['press', ''])); l.lastElementChild.querySelector('.se-lbl').focus(); return; }
     const sr = e.target.closest('.se-row');
@@ -6155,18 +6172,20 @@ function save(){ try {
   if (isP && curProj !== EXID && !projQuiet) projTouch(curProj, comps.length);
 } catch(e){} }
 $('#btnExport').onclick = () => {
+  if (!isAdm()) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(dump(), null, 1)], {type:'application/json'}));
   a.download = 'devre.json'; a.click();
 };
-$('#btnImport').onclick = () => $('#file').click();
+$('#btnImport').onclick = () => { if (isAdm()) $('#file').click(); };
 $('#file').onchange = e => {
+  if (!isAdm()){ e.target.value = ''; return; }
   const f = e.target.files[0]; if (!f) return;
   f.text().then(t => { try { load(JSON.parse(t)); } catch(err){ alert('Geçersiz dosya'); } });
   e.target.value = '';
 };
-$('#btnClear').onclick = () => { if (confirm('Tüm devre silinsin mi?')) load({comps:[],wires:[]}); };
-$('#btnDemo').onclick = demo;
+$('#btnClear').onclick = () => { if (!isAdm()) return; if (confirm('Tüm devre silinsin mi?')) load({comps:[],wires:[]}); };
+$('#btnDemo').onclick = e => { if (!isAdm()) return; demo(e); };
 $('#btnGrid').onclick = e => { const off = svg.classList.toggle('nogrid'); e.currentTarget.classList.toggle('on', !off); };
 
 function demo(){ demoBuild(); select(null); update(); }
