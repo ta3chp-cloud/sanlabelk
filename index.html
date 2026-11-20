@@ -679,7 +679,7 @@
   #pageLib .lmw .lmac{border-radius:24px 0 0 24px}
   #pageLib .lmac{gap:20px;padding:14px 16px 14px 14px;border-radius:24px;min-height:142px;align-items:center}
   #pageLib .lmac .lth{width:90px;height:72px;border-radius:10px;border:1px solid #ece9e3}
-  #pageLib .lmac .lb{gap:7px}
+  #pageLib .lmac .lb{gap:7px;transform:translateY(-7px)}
   #pageLib .lmac .lt{font-size:15px;line-height:19px;font-weight:500;color:#6f7480}
   #pageLib .lmac .ln{gap:11px;align-items:flex-start}
   #pageLib .lmac .lnum{width:27px;height:27px;border-radius:7px;font-size:15px;line-height:1;margin-top:-2px}
@@ -5581,7 +5581,7 @@ function libMacrosHtml(){
     return `<div class="lgrp"><span>${esc(cat)}</span><span class="mga"><span class="mgc">${items.length}</span>${catBtns(ci)}</span></div><div class="lgrid">` +
       (items.length ? items.map(([m, i], k) => {
         let th = 'boş'; if (m.c.length){ try { th = macroThumb(m); } catch(e){} }
-        return `<div class="lmw"><button type="button" class="lmac" data-lmac="${i}"><div class="lth">${th}</div><div class="lb"><span class="lt">${m.c.length ? 'Şema + makro' : 'Makro · içi boş'}</span><div class="ln"><span class="lnum">${k + 1}</span><b>${esc(m.n)}</b></div>${m.d ? `<span class="lt">${esc(m.d)}</span>` : ''}<span class="note" hidden>Bu makronun içi henüz boş.</span></div></button>${macActions(i)}</div>`;
+        return `<div class="lmw"><button type="button" class="lmac" data-lmac="${i}"><div class="lth">${th}</div><div class="lb"><span class="lt">${m.c.length ? 'Şema' : 'Makro · içi boş'}</span><div class="ln"><span class="lnum">${k + 1}</span><b>${esc(m.n)}</b></div>${m.d ? `<span class="lt">${esc(m.d)}</span>` : ''}<span class="note" hidden>Bu makronun içi henüz boş.</span></div></button>${macActions(i)}</div>`;
       }).join('') : '<div class="mac-empty" style="grid-column:1/-1">Bu kategori boş.</div>') + '</div>';
   }).join('');
 }
@@ -5593,17 +5593,7 @@ document.addEventListener('click', e => {
   go('draw'); setPalTab('mac'); placing = null; placingMacro = m; markPalette(); render();
 });
 function renderLib(){
-  $('#libList').innerHTML = libMacrosHtml() + '<div style="height:22px"></div>' + SECTIONS.map((s,si) => {
-    if (s.deleted) return '';
-    const vc = s.circuits.filter(c => !c.deleted);
-    const tk = vc.flatMap(c => c.tasks), dn = tk.filter(t => prog.done[t.id]).length;
-    return `<div class="card sec"><div class="sh"><b>Bölüm ${secNo(si)} · ${esc(s.t)}</b><span>${dn}/${tk.length}</span></div>` +
-      vc.map(c => `<div class="lbl" style="margin:12px 0 2px;font-size:13px">${esc(c.t)}</div>` +
-        c.tasks.map(t => `<div class="row2"><span class="chk ${prog.done[t.id]?'ok':''}">${prog.done[t.id]?ICON.check:''}</span>
-          <div class="t">${esc(t.t)}<small>${esc(t.d)}</small></div>
-          <button data-act="start:${t.id}">${prog.done[t.id]?'Tekrar':'Başla'}</button></div>`).join('')
-      ).join('') + '</div>';
-  }).join('');
+  $('#libList').innerHTML = libMacrosHtml();
 }
 const PAGES = {learn:'#pageLearn', lib:'#pageLib', circ:'#pageCirc', draw:'#pageDraw'};
 function go(p){
