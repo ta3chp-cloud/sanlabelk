@@ -1037,6 +1037,27 @@ body:not(.is-admin) #btnImport, body:not(.is-admin) #saveBtn, body:not(.is-admin
 #klBox .kr.sw{cursor:pointer;font-size:18px;font-weight:600;justify-content:space-between}
 #klBox .kr.sw svg{width:22px;height:22px;color:#999}
 #klToast{position:fixed;left:52px;bottom:16px;z-index:99999;font:12px system-ui;background:#222;color:#fff;padding:6px 10px;border-radius:8px;display:none}
+
+  /* ===== MOBİL DÜZEN (telefon/tablet): masaüstü ölçeklemesi kapalı, çizim ekranı tam ekran + çekmece/alt panel ===== */
+  @media (max-width:900px){
+    html,body{height:100%}
+    body{zoom:1;width:100%;height:100vh;height:100dvh}
+    #content{min-height:0}
+    main{display:block!important;position:relative;flex:1;min-height:0;overflow:hidden}
+    #wrap{height:100%!important;padding:8px}
+    #left{position:absolute;left:0;top:0;bottom:0;width:min(300px,86vw);z-index:30;box-shadow:6px 0 24px rgba(0,0,0,.22);border-right:0}
+    main.lhide #left,main.nopal #left{display:none}
+    #right{position:absolute!important;left:0;right:0;bottom:0;top:auto;width:auto!important;max-height:55%;z-index:28;border-radius:16px 16px 0 0;box-shadow:0 -8px 28px rgba(0,0,0,.18)}
+    main.wellon #right{right:0}
+    #wellPanel{position:absolute;left:0;right:0;bottom:0;max-height:60%;overflow:auto;z-index:27}
+    #palOpen{width:44px;height:44px}
+    #tHead{height:60px;padding:0 10px}
+    #tHead .tt b{font-size:17px}
+    #tHead .ib{width:44px;height:44px}
+    #tHead .wbtn img{height:38px}
+    .comp .pin{r:7}
+    button,.btn,.pal{min-height:40px}
+  }
 </style>
 </head>
 <body>
@@ -6221,6 +6242,7 @@ function cvDraw(cv,m,hit){
 (function init(){
   buildSheet();
   openCtx('free'); props(); go('learn');
+  if (window.matchMedia('(max-width:900px)').matches) $('main').classList.add('lhide');   // telefonda palet çekmecesi kapalı başlar
   setInterval(() => {
     if (mode === 'sim') tick(0.05);
     else ydPaint();   // düzenleme modunda yıldız-üçgen panelini kapat
