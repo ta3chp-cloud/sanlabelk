@@ -666,6 +666,25 @@
   .lmac b{font-size:16px;line-height:1.25;color:#1d2230}
   .lmac .note{font-size:12.5px;color:#b26a00}
   .lmac .mchev{flex:none;color:#9aa0ab}
+  /* ===== Kütüphane v2 (ekran görüntüsü ölçüleri) ===== */
+  #pageLib h1.pt{font-size:33px;line-height:1.15;font-weight:700;letter-spacing:-.2px;margin:0 0 22px}
+  #pageLib .lgrp{margin:30px 4px 12px;font-size:16px;line-height:20px;font-weight:700;color:#6f7480}
+  #pageLib .lgrp:first-child{margin-top:0}
+  #pageLib .mgc{font-weight:700;color:#6f7480;font-size:16px}
+  #pageLib .lgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+  @media (max-width:1100px){#pageLib .lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:700px){#pageLib .lgrid{grid-template-columns:1fr}}
+  #pageLib .lmw{border:1px solid #ece9e3;border-radius:24px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.03);min-height:142px}
+  #pageLib .lmw:hover{background:#fcfbf9}
+  #pageLib .lmw .lmac{border-radius:24px 0 0 24px}
+  #pageLib .lmac{gap:20px;padding:14px 16px 14px 14px;border-radius:24px;min-height:142px;align-items:center}
+  #pageLib .lmac .lth{width:90px;height:72px;border-radius:10px;border:1px solid #ece9e3}
+  #pageLib .lmac .lb{gap:7px}
+  #pageLib .lmac .lt{font-size:15px;line-height:19px;font-weight:500;color:#6f7480}
+  #pageLib .lmac .ln{gap:11px;align-items:flex-start}
+  #pageLib .lmac .lnum{width:27px;height:27px;border-radius:7px;font-size:15px;line-height:1;margin-top:-2px}
+  #pageLib .lmac b{font-size:19px;line-height:24px;font-weight:700;letter-spacing:-.1px;color:#15171c}
+  #pageLib .lmac::after{content:"";flex:none;width:10px;height:16px;margin-left:2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16' fill='none' stroke='%239aa0ab' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 2l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
   .mac-empty{padding:18px 10px;text-align:center;color:var(--muted);font-size:13.5px;border:1.5px dashed var(--line);border-radius:12px}
   .mac-tools{margin-top:4px;padding-top:10px;border-top:1px dashed var(--line)}
   .mac-tools button{width:100%;font-size:13px;padding:8px 10px}
