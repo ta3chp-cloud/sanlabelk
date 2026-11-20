@@ -406,6 +406,8 @@
   @keyframes delPop{from{transform:scale(.85)}to{transform:scale(1)}}
   .sh2 .del-btn{top:12px;right:14px;width:30px;height:30px}
   .sh2 .del-btn.ask{width:auto}
+  .add-sec-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:0 0 18px;padding:15px;border:2px dashed #d3cfc7;border-radius:20px;background:transparent;color:#6f7480;font:600 16px system-ui;cursor:pointer}
+  .add-sec-btn:hover{background:#fff;color:#252a34;border-color:#7a808c}
   .restore-del{display:block;margin:6px 0 0 6px;padding:8px 14px;border:1.5px dashed #b9b5ac;border-radius:10px;background:transparent;color:#6f7480;font:600 14px system-ui;cursor:pointer}
   .restore-del:hover{background:#fff;color:#252a34;border-color:#7a808c}
   /* ===== Görev listesi ekranı ===== */
@@ -959,7 +961,7 @@ html.kdark img,html.kdark video{filter:invert(1) hue-rotate(180deg)}
 #klLock{display:none!important}
 </style>
 <style id="klAuthCss">
-body:not(.is-admin) .ren, body:not(.is-admin) .del-btn, body:not(.is-admin) .add-circ-btn,
+body:not(.is-admin) .ren, body:not(.is-admin) .del-btn, body:not(.is-admin) .add-circ-btn, body:not(.is-admin) .add-sec-btn,
 body:not(.is-admin) .macact, body:not(.is-admin) .mact, body:not(.is-admin) [data-mm],
 body:not(.is-admin).taskmode #clearCanvasBtn, body:not(.is-admin) #btnDemo, body:not(.is-admin) #btnClear, body:not(.is-admin) #btnExport,
 body:not(.is-admin) #btnImport, body:not(.is-admin) #saveBtn, body:not(.is-admin) [data-act="resetAll"]{display:none!important}
@@ -1245,7 +1247,7 @@ function drawSet(){var h='<h1>Ayarlar<button data-sa="close">Bitti</button></h1>
   h+='</div><div class="spc">'+['lang','theme'].map(function(k){return row(k==='lang'?'globe':'half',OPT[k][0],'','<span class="spv">'+lab(k)+'</span>'+CH,'p:'+k)}).join('')+'</div>';
   h+='<h4>Simülasyon</h4><div class="spc">'+row('vol','Ses efektleri','Kontaktör ve röle tıklama sesleri.','<div class="sptg'+(P.snd?' on':'')+'"></div>','snd')
    +row('bolt','Şebeke gerilimi',lab('volt'),CH,'p:volt')+row('wire','Kablo renkleri',lab('wire'),CH,'p:wire')+'</div>';
-  h+='<h4>Veri</h4><div class="spc">'+row('reset','İlerlemeyi sıfırla','','','rp')+'<div class="spr spred" data-act="resetAll" style="display:none">'+svg('trash')+'<div class="t">Tüm verileri sil</div></div></div>';
+  h+='<h4>Veri</h4><div class="spc">'+row('reset','İlerlemeyi sıfırla','','','rp')+'<div class="spr spred" data-act="resetAll" style="display:none">'+svg('trash')+'<div class="spt2">Tüm verileri sil<small>Yönetici: tüm içerik ve ilerleme silinir.</small></div>'+CH+'</div></div>';
   h+='<div class="spc" style="margin-top:20px">'+row('star','Uygulamayı puanla','',CH,'rate')+row('share','Arkadaşına öner','',CH,'share')+'</div>'
    +'<div class="spc">'+row('play','Tanıtımı tekrar göster','',CH,'intro')+row('chat','Geri bildirim gönder','',CH,'fb')+row('shield','Gizlilik politikası','',CH,'priv')+row('doc','Kullanım Koşulları','',svg('ext','spch'),'terms')+'</div>';
   $('setIn').innerHTML=h;if(role==='admin'){var d=$('setIn').querySelector('[data-act=resetAll]');d.style.display='flex'}}
@@ -5323,6 +5325,8 @@ let customData = { added: {}, names: {} };
 try { customData = Object.assign({ added: {}, names: {} }, JSON.parse(localStorage.getItem(CKEY)) || {}); } catch(e){}
 const saveCustomData = () => { try { localStorage.setItem(CKEY, JSON.stringify(customData)); } catch(e){} };
 
+customData.secs = Array.isArray(customData.secs) ? customData.secs : [];
+customData.secs.forEach(x => { const i = SECTIONS.length; SEC_ORIG[i] = x.t; SECTIONS.push({t:(secNames[i] && String(secNames[i]).trim()) || x.t, circuits:[]}); });   // yöneticinin eklediği bölümler
 // Kayıtlı özel devreleri ve isimleri SECTIONS içine yükle
 SECTIONS.forEach((s, si) => {
   if (customData.added[si] && Array.isArray(customData.added[si])) {
@@ -5373,7 +5377,7 @@ function renderSections(){
           <div class="sc">${dn}/${tk.length} ${open ? ICON.chevUp : ICON.chevDown}</div>
           <div class="sbar"><i style="width:${tk.length ? dn / tk.length * 100 : 0}%"></i></div></div>
         ${open ? `<div class="cg">${rows}${addBtn}</div>` : ''}</div>`;
-    }).join('') + taskBoxesHtml() + (anyDel() ? '<button type="button" class="restore-del" data-restoredel>↺ Silinenleri geri getir</button>' : '');
+    }).join('') + `<button type="button" class="add-sec-btn" data-addsec title="Yeni bölüm ekle" aria-label="Yeni bölüm ekle">${PLUS_ICON}<span>Bölüm ekle</span></button>` + taskBoxesHtml() + (anyDel() ? '<button type="button" class="restore-del" data-restoredel>↺ Silinenleri geri getir</button>' : '');
 }
 /* ===== Görev kutuları (14 adet) + zaman çizelgesi sonu ===== */
 const TASK_BOX_COUNT = 14;
@@ -5453,6 +5457,16 @@ function taskBoxesHtml(){
       else if (k === 'b'){ DEL.b.push(+v); openBox.delete(+v); if (editBox === +v) editBox = -1; }
       saveDel(); applyDel(); editCirc = ''; editSec = -1; renderHome(); renderLib(); return;
     }
+    const addSec = e.target.closest('[data-addsec]');
+    if (addSec){
+      e.stopPropagation();
+      const nm = 'Yeni Bölüm', si = SECTIONS.length;
+      customData.secs.push({t:nm}); SEC_ORIG[si] = nm; SECTIONS.push({t:nm, circuits:[]});
+      saveCustomData(); openSec.add(si); editCirc = ''; editBox = -1; editSec = si;
+      renderHome(); renderLib();
+      const inp = box.querySelector('input.nmin'); if (inp){ inp.focus(); inp.select(); inp.scrollIntoView({block:'center'}); }
+      return;
+    }
     const addBtn = e.target.closest('[data-addcirc]');
     if (addBtn){
       e.stopPropagation();
@@ -5521,7 +5535,7 @@ function renderHome(){
   $('#hDone').textContent = d;
   $('#hTotal').textContent = `/ ${n} görev tamamlandı`;
   $('#hBar').style.width = (n ? d / n * 100 : 0) + '%';
-  $('#hStat').textContent = `${visSecCount()} bölüm · ${circuitCount()} devre · ${n} görev`;
+  $('#hStat').textContent = `${visSecCount() + visBoxCount()} bölüm · ${circuitCount()} devre · ${n} görev`;
   renderSections();
   const t = nextTask();
   $('#hCard').innerHTML = t
