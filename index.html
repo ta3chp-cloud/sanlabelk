@@ -190,7 +190,12 @@
   .tend .nd{position:absolute;left:-52px;top:0;width:46px;height:46px}
   .tend .nd svg{display:block}
   .tend span{margin-left:6px;color:#9a9ea8;font-size:17px;font-weight:500}
-  .tl .en{position:absolute;left:1px;top:12px;width:4px;height:75px;background:repeating-linear-gradient(to bottom,var(--accent) 0 6px,#f7f6f3 6px 10px)}
+  .tl .en{position:absolute;left:1px;top:12px;width:4px;height:0;border-radius:2px;pointer-events:none;z-index:1;
+    background:linear-gradient(to bottom,var(--accent) 0 6px,#f7f6f3 6px 10px) 0 0/4px 10px repeat-y;
+    animation:railFlow .7s linear infinite;transition:height .9s cubic-bezier(.4,0,.2,1)}
+  @keyframes railFlow{from{background-position:0 0}to{background-position:0 10px}}
+  @media (prefers-reduced-motion:reduce){.tl .en{animation:none}}
+  .tl .scard .node{z-index:2}
   .l1{position:absolute;left:-5px;top:0;display:flex;align-items:center;gap:5px;color:var(--accent);font-weight:800;font-size:12px}
   .l1 svg{display:block}
   .scard{position:relative;background:#fff;border:1px solid #f1cdb9;border-radius:20px;margin-bottom:18px}
@@ -5500,7 +5505,7 @@ function thumb(icons){
   }).join('');
   return `<svg viewBox="0 0 ${n*60} 100" width="62" height="48" style="color:#8b91a1"><g class="sym" style="stroke-width:3.5">${g}</g></svg>`;
 }
-const nodeSvg = done => `<svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="23" fill="${done?'#fcd9c3':'#f6e4d9'}"/><path d="${done?'M23 38V5':'M23 38L13 17'}" stroke="#15171c" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="23" cy="5" r="3.5" fill="#15171c"/><circle cx="23" cy="38" r="3.5" fill="#15171c"/></svg>`;
+const nodeSvg = done => `<svg data-d="${done?1:0}" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="23" fill="${done?'#fcd9c3':'#f6e4d9'}"/><path d="${done?'M23 38V5':'M23 38L13 17'}" stroke="#15171c" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="23" cy="5" r="3.5" fill="#15171c"/><circle cx="23" cy="38" r="3.5" fill="#15171c"/></svg>`;
 const SKEY = 'kumandalab.secNames';
 const SEC_ORIG = SECTIONS.map(x => x.t);
 const ORIG_SEC_N = SECTIONS.length;   // hazır bölümler; sonrakiler yöneticinin eklediği bölümlerdir (listenin en sonunda görünür)
@@ -5570,13 +5575,38 @@ function renderSections(){
           <div class="sbar"><i style="width:${tk.length ? dn / tk.length * 100 : 0}%"></i></div></div>
         ${open ? `<div class="cg">${rows}${addBtn}</div>` : ''}</div>`;
   };
-  $('#secList').innerHTML = `<div class="l1"><svg width="16" height="12" viewBox="0 0 16 12"><polygon points="0,0 16,0 8,12" fill="#e8590c"/></svg>L1</div><div class="en"></div>` +
+  $('#secList').innerHTML = `<div class="l1"><svg width="16" height="12" viewBox="0 0 16 12"><polygon points="0,0 16,0 8,12" fill="#e8590c"/></svg>L1</div>` +
     SECTIONS.map((s,si) => si < ORIG_SEC_N ? secCard(s,si) : '').join('') +
     taskBoxesHtml() +
     SECTIONS.map((s,si) => si >= ORIG_SEC_N ? secCard(s,si) : '').join('') +
     `<button type="button" class="add-sec-btn" data-addsec title="Yeni bölüm ekle" aria-label="Yeni bölüm ekle">${PLUS_ICON}<span>Bölüm ekle</span></button>` + tendHtml() +
     (anyDel() ? '<button type="button" class="restore-del" data-restoredel>↺ Silinenleri geri getir</button>' : '');
+  updateRail();
 }
+/* ===== Sol hat: tamamlanan görevlere göre ilerler, kesik çizgiler aşağı akar ===== */
+let railEl = null, railH = 0;
+function updateRail(){
+  const box = $('#secList'); if (!box) return;
+  if (!railEl){ railEl = document.createElement('div'); railEl.className = 'en'; }
+  box.appendChild(railEl);
+  railEl.style.height = railH + 'px';
+  const br = box.getBoundingClientRect();
+  if (!br.height) return;
+  const nodes = Array.from(box.querySelectorAll('.scard .node'));
+  const endNd = box.querySelector('.tend .nd');
+  const center = el => { const r = el.getBoundingClientRect(); return r.top - br.top + r.height / 2; };
+  const cur = nodes.find(n => !(n.firstElementChild && n.firstElementChild.dataset.d === '1'));
+  const target = cur ? center(cur) : (endNd ? center(endNd) : (nodes.length ? center(nodes[nodes.length-1]) : 0));
+  const h = Math.max(0, Math.round(target - 12));
+  void railEl.offsetHeight;
+  railEl.style.height = h + 'px';
+  railH = h;
+}
+(function(){
+  const box = $('#secList'); if (!box || !window.ResizeObserver) return;
+  let t = 0;
+  new ResizeObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(updateRail); }).observe(box);
+})();
 /* ===== Görev kutuları (14 adet) + zaman çizelgesi sonu ===== */
 const TASK_BOX_COUNT = 14;
 const NKEY = 'kumandalab.taskNames';
