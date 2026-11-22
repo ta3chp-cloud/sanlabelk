@@ -467,6 +467,11 @@
   .tk-ib[data-tkdel]{color:#c92a2a}
   .tk-ib[data-tkdel]:hover{background:#fff0f0;border-color:#e03131}
   .tk-ib.ask{background:#e03131;border-color:#e03131;color:#fff}
+  .tk-ib.tk-rep{display:inline-flex;align-items:center;gap:5px;padding:0 10px 0 8px;background:#fff4ec;border-color:#f6d3bb;color:#c2410c;font:700 12.5px system-ui;transition:background .18s,color .18s,border-color .18s,transform .12s}
+  .tk-ib.tk-rep svg{width:15px;height:15px;flex:none;transition:transform .45s cubic-bezier(.4,.2,.2,1)}
+  .tk-ib.tk-rep:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tk-ib.tk-rep:hover svg{transform:rotate(360deg)}
+  .tk-ib.tk-rep:active{transform:scale(.94)}
   .tk-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border:0;border-top:1.5px dashed rgba(122,128,140,.4);background:rgba(122,128,140,.06);color:#6b7180;font:700 15px system-ui;cursor:pointer}
   .tk-add:hover{background:rgba(122,128,140,.14);color:#252a34}
   .tk-empty{padding:22px;text-align:center;color:#7a808c;font-size:14.5px}
@@ -5897,6 +5902,7 @@ applyDel();
 (function(){ let ch = false; allTasks().forEach(t => { if (prog.done[t.id] && !(t.steps && t.steps.length)){ delete prog.done[t.id]; ch = true; } }); if (ch) saveProg(); })();
 const circObj = () => curCirc && SECTIONS[curCirc.si] && SECTIONS[curCirc.si].circuits[curCirc.ci];
 const hiddenTasks = c => (c.orig || []).concat(TE.added[c.cid] || []).filter(t => TE.deleted.includes(t.id));
+const REPEAT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
 const SMALL_STAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 const MAP_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="9" width="6" height="6" rx="1"/><path d="M9 6h3v12H9M12 12h3"/></svg>';
 const BACK_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>';
@@ -5947,7 +5953,7 @@ function renderCircPage(){
       <div class="tkb"><div class="tkm">${i + 1}. görev${done ? ' · Tamamlandı' : isCur ? ' · Sıradaki' : ''}</div>${title}
         ${descHtml}</div>
       <div class="tkx">${done ? `<span class="tks">${SMALL_STAR}${SMALL_STAR}${SMALL_STAR}</span>` : ''}
-        <div class="tka">${done ? `<button type="button" class="tk-ib" data-act="cstart:${id}" title="Tekrar çöz" aria-label="Tekrar çöz">↻</button>` : ''}
+        <div class="tka">${done ? `<button type="button" class="tk-ib tk-rep" data-act="cstart:${id}" title="Tekrar çöz" aria-label="Tekrar çöz">${REPEAT_ICON}<span>Tekrar</span></button>` : ''}
           ${adm ? `<button type="button" class="tk-ib" data-tkren="${id}" title="Adı ve açıklamayı düzenle" aria-label="Adı ve açıklamayı düzenle">${PEN}</button>` : ''}
           ${!adm ? '' : ask ? `<button type="button" class="tk-ib ask" data-tkdel="${id}" title="Silmeyi onayla">Sil?</button>` : `<button type="button" class="tk-ib" data-tkdel="${id}" title="Görevi sil" aria-label="Görevi sil">${TRASH_ICON}</button>`}</div></div></div>`;
   }).join('');
